@@ -14,4 +14,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Perintah untuk menjalankan aplikasi menggunakan Gunicorn
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8896", "app:app"]
+CMD ["gunicorn", "-b", "0.0.0.0:8896", "app:app"]
