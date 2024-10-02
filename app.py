@@ -60,4 +60,4 @@ def predict():
 
 # Menjalankan aplikasi
 if __name__ == '__main__':
-    app.run(debug=False, port=8896, host='0.0.0.0', threaded=True)
+    app.run(debug=False, host='0.0.0.0', threaded=True)
