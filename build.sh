@@ -7,7 +7,7 @@ today=$(date +%Y-%m-%d)
 image_name="gaya-belajar-model:$today"
 
 # Membangun image Docker
-docker build -t $image_name .
+docker build --no-cache -t $image_name .
 
 # Konfirmasi sebelum menjalankan container
 read -p "Apakah Anda ingin menjalankan container dengan nama 'gaya-belajar-container'? (yes/no): " confirm
