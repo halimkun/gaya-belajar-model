@@ -1,21 +1,17 @@
 #!/bin/bash
 
-# Mendapatkan tanggal hari ini dalam format YYYY-MM-DD
-today=$(date +%Y-%m-%d)
+# Get today's date in YYYYMMDD format
+TODAY=$(date +"%Y%m%d")
 
-# Nama image
-image_name="gaya-belajar-model:$today"
+# Docker build with a tag that includes today's date
+docker-compose down
+docker-compose build --tag gaya-belajar-model:$TODAY
 
-# Membangun image Docker
-docker build --no-cache -t $image_name .
-
-# Konfirmasi sebelum menjalankan container
-read -p "Apakah Anda ingin menjalankan container dengan nama 'gaya-belajar-container'? (yes/no): " confirm
-
-if [[ $confirm == "yes" ]]; then
-    # Menjalankan container dengan restart policy
-    docker run -d --restart always -p 8896:8896 --name gaya-belajar-container $image_name
-    echo "Container 'gaya-belajar-container' telah dijalankan dengan restart policy 'always'."
+# Confirmation prompt
+read -p "Do you want to run the container now? (yes/no) " choice
+if [[ "$choice" == "yes" ]]; then
+    docker-compose up -d
+    echo "Container is running with tag gaya-belajar-model:$TODAY"
 else
-    echo "Container tidak dijalankan."
+    echo "Build completed. Run 'docker-compose up -d' to start the container."
 fi
