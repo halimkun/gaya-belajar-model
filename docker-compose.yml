@@ -1,0 +1,18 @@
+version: '3'
+services:
+  gbmodel:
+    build: .
+    container_name: gbmodel
+    ports:
+      - "8896:8896"
+    networks:
+      - cloudflared_tunnel
+    volumes:
+      - .:/app
+    environment:
+      - FLASK_ENV=production
+    restart: always
+
+networks:
+  cloudflared_tunnel:
+    external: true
