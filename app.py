@@ -35,6 +35,17 @@ def predict():
                 }), 500
             
         data.setdefault('skor', (data['mtk'] + data['pjok']) / 2)
+        
+        # order the data must be the same with required_fields and set skor in last index of data to avoid error
+        ordered_data = {
+            'mtk': data['mtk'],
+            'pjok': data['pjok'],
+            'visual': data['visual'],
+            'auditori': data['auditori'],
+            'kinestetik': data['kinestetik'],
+            'skor': data['skor']
+        }
+        data = ordered_data
 
         # Menyusun data input
         input_data = pd.DataFrame([data])
@@ -60,4 +71,4 @@ def predict():
 
 # Menjalankan aplikasi
 if __name__ == '__main__':
-    app.run(debug=False, port=8896, host='0.0.0.0', threaded=True)
+    app.run(debug=True, port=8896, host='0.0.0.0', threaded=True)
