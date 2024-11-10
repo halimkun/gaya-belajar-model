@@ -3,9 +3,14 @@ import pickle
 import numpy as np
 import pandas as pd
 from collections import Counter
+import datetime
+import locale
 
 # Membuat instance Flask
 app = Flask(__name__)
+
+# set locale to Indonesia
+locale.setlocale(locale.LC_ALL, 'id_ID.UTF-8')
 
 # Load the model, scaler, label encoder, and y_train
 with open('knn_model.pkl', 'rb') as file:
@@ -18,7 +23,11 @@ with open('knn_model.pkl', 'rb') as file:
 # Menambahkan route index untuk menguji server
 @app.route('/')
 def index():
-    return 'Server is running'
+    # return message server running and show the last update today in json format, last update is date format day date, month, year
+    return jsonify({
+        'message': 'Server is running',
+        'update': datetime.datetime(2024, 11, 10).strftime('%A, %d %B %Y')
+    })
 
 # Endpoint untuk prediksi
 @app.route('/predict', methods=['POST'])
