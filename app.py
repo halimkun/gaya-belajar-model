@@ -7,23 +7,13 @@ from collections import Counter
 # Membuat instance Flask
 app = Flask(__name__)
 
-# Memuat model, scaler, dan label encoder yang sudah diekspor menggunakan pickle
-with open('scaler.pkl', 'rb') as f:
-    scaler = pickle.load(f)
-
-with open('knn_model.pkl', 'rb') as f:
-    knn_model = pickle.load(f)
-
-with open('label_encoder.pkl', 'rb') as f:
-    label_encoder = pickle.load(f)
-    
-# Memuat X_train dan y_train
-with open('X_train.pkl', 'rb') as f:
-    X_train = pickle.load(f)
-
-with open('y_train.pkl', 'rb') as f:
-    y_train = pickle.load(f)
-
+# Load the model, scaler, label encoder, and y_train
+with open('knn_model.pkl', 'rb') as file:
+    data = pickle.load(file)
+    knn_model = data['model']
+    scaler = data['scaler']
+    label_encoder = data['label_encoder']
+    y_train = data['y_train'] 
 
 # Menambahkan route index untuk menguji server
 @app.route('/')
@@ -34,10 +24,10 @@ def index():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        # Mendapatkan data dari permintaan JSON
+        # Receive data from JSON request
         data = request.get_json(force=True)
         
-        # Validasi data
+        # Data validation and handling missing fields
         required_fields = ['mtk', 'pjok', 'visual', 'auditori', 'kinestetik']
         for field in required_fields:
             if field not in data:
@@ -46,61 +36,43 @@ def predict():
                         'message': f'Field {field} is required',
                         'code': 400
                     }
-                }), 400  # Ganti kode status menjadi 400 (Bad Request)
-            
-        # Jika skor tidak ada, hitung skor sebagai rata-rata MTK dan PJOK
+                }), 400
+        
+        # Calculate `skor` if not provided
         data.setdefault('skor', (data['mtk'] + data['pjok']) / 2)
         
-        # Mengurutkan data agar sesuai dengan urutan yang diharapkan
-        ordered_data = {
-            'mtk': data['mtk'],
-            'pjok': data['pjok'],
-            'visual': data['visual'],
-            'auditori': data['auditori'],
-            'kinestetik': data['kinestetik'],
-            'skor': data['skor']
-        }
-        data = ordered_data
-        
-
-        # Menyusun data input untuk model
-        input_data = pd.DataFrame([data])
-
-        # Normalisasi data
+        # Prepare and scale input data
+        input_data = pd.DataFrame([data], columns=['mtk', 'pjok', 'visual', 'auditori', 'kinestetik', 'skor'])
         input_data_scaled = scaler.transform(input_data)
-
-        # Mendapatkan tetangga terdekat untuk data input
-        neighbors = knn_model.kneighbors(input_data_scaled, n_neighbors=3)  # Mendapatkan indeks tetangga terdekat
-        indices = neighbors[1]  # Indeks tetangga terdekat
         
-        # Mengambil label dari data latih berdasarkan indeks tetangga terdekat
+        # Retrieve neighbors and distances
+        distances, indices = knn_model.kneighbors(input_data_scaled, n_neighbors=3)
+        
+        # Predict main label
+        predicted_label_encoded = knn_model.predict(input_data_scaled)
+        predicted_label = label_encoder.inverse_transform(predicted_label_encoded)[0]
+        
+        # Retrieve labels and distances of neighbors
         neighbor_labels = label_encoder.inverse_transform(y_train.iloc[indices.flatten()])
-
-        # Menghitung jumlah setiap label gaya belajar (termasuk campuran)
+        neighbor_info = [
+            {"label": label, "distance": distance}
+            for label, distance in sorted(zip(neighbor_labels, distances.flatten()), key=lambda x: x[1])
+        ]
+        
+        # Calculate prediction percentages
         label_counts = Counter(neighbor_labels)
-        
-        # Menghitung total jumlah tetangga
         total_neighbors = len(neighbor_labels)
+        percentage_predictions = {label: (count / total_neighbors) * 100 for label, count in label_counts.items()}
         
-        # Persentase prediksi
-        percentage_predictions = []
-        for neighbors in indices:
-            # Ambil label dari tetangga terdekat
-            neighbor_labels = y_train.iloc[neighbors]
-            label_counts = Counter(neighbor_labels)
-
-            percentage = {label_encoder.inverse_transform([label])[0]: (count / total_neighbors) * 100 for label, count in label_counts.items()}
-            percentage_predictions.append(percentage)
-
-        # Melakukan prediksi untuk data input
-        prediction = knn_model.predict(input_data_scaled)
-
-        # Mengembalikan hasil prediksi dan persentase sebagai JSON
-        return jsonify({
-            'results': percentage_predictions,
-            'input': data
-        }), 200
+        # Prepare final output
+        prediction_result = {
+            'predicted_label': predicted_label,
+            'percentage_predictions': percentage_predictions,
+            'neighbors': neighbor_info
+        }
         
+        return jsonify(prediction_result), 200
+    
     except Exception as e:
         return jsonify({
             'error': {
