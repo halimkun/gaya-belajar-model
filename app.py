@@ -20,6 +20,8 @@ with open('knn_model.pkl', 'rb') as file:
     scaler = data['scaler']
     label_encoder = data['label_encoder']
     y_train = data['y_train'] 
+    X_train = data['X_train']
+    X_test = data['X_test']
 
 # Menambahkan route index untuk menguji server
 @app.route('/')
@@ -29,6 +31,50 @@ def index():
         'message': 'Server is running',
         'update': datetime.datetime(2024, 11, 10).strftime('%A, %d %B %Y')
     })
+
+@app.route('/importance', methods=['GET'])
+def importance():
+    try:
+        # Data uji (ambil sampel dari dataset atau gunakan data lain)
+        sample_data = X_test[:10]  # Contoh sampel 10 data
+        feature_importance = []
+
+        # Iterasi untuk setiap fitur
+        for i in range(X_train.shape[1]):
+            perturbed_data = sample_data.copy()
+
+            # Manipulasi nilai fitur ini (+10% dari nilai asli)
+            perturbed_data[:, i] *= 1.10
+
+            # Hitung perubahan jarak rata-rata ke tetangga terdekat
+            original_distances, _ = knn_model.kneighbors(sample_data)
+            perturbed_distances, _ = knn_model.kneighbors(perturbed_data)
+
+            # Rata-rata perubahan jarak
+            mean_change = np.mean(np.abs(perturbed_distances - original_distances))
+            feature_importance.append(mean_change)
+
+        # Buat hasil dalam bentuk JSON
+        importance_result = {
+            'features': {
+                'mtk': feature_importance[0],
+                'pjok': feature_importance[1],
+                'visual': feature_importance[2],
+                'auditori': feature_importance[3],
+                'kinestetik': feature_importance[4],
+                'skor': feature_importance[5]
+            }
+        }
+
+        return jsonify(importance_result), 200
+
+    except Exception as e:
+        return jsonify({
+            'error': {
+                'message': str(e),
+                'code': 500
+            }
+        }), 500
 
 # Endpoint untuk prediksi
 @app.route('/predict', methods=['POST'])
