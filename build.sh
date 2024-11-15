@@ -5,7 +5,7 @@ TODAY=$(date +"%Y%m%d")
 
 # Docker build with a tag that includes today's date
 docker compose down
-docker compose build --tag gaya-belajar-model:$TODAY
+docker compose build gaya-belajar-model:$TODAY
 
 # Confirmation prompt
 read -p "Do you want to run the container now? (yes/no) " choice
