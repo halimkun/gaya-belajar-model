@@ -2,6 +2,7 @@ version: '3'
 services:
   gbmodel:
     build: .
+    image: gaya-belajar-model:20241115
     container_name: gbmodel
     ports:
       - "8896:8896"
@@ -10,7 +11,7 @@ services:
     volumes:
       - .:/app
     environment:
-      - FLASK_ENV=production
+      - FLASK_DEBUG=1
     restart: always
 
 networks:

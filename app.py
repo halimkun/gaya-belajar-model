@@ -1,16 +1,17 @@
 from flask import Flask, request, jsonify
-import pickle
-import numpy as np
-import pandas as pd
 from collections import Counter
+
+import pandas as pd
+import numpy as np
 import datetime
-import locale
+import pickle
+# import locale
 
 # Membuat instance Flask
 app = Flask(__name__)
 
 # set locale to Indonesia
-locale.setlocale(locale.LC_ALL, 'id_ID.UTF-8')
+# locale.setlocale(locale.LC_ALL, 'id_ID.UTF-8')
 
 # Load the model, scaler, label encoder, and y_train
 with open('knn_model.pkl', 'rb') as file:
