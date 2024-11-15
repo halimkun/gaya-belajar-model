@@ -29,7 +29,7 @@ def index():
     # return message server running and show the last update today in json format, last update is date format day date, month, year
     return jsonify({
         'message': 'Server is running',
-        'update': datetime.datetime(2024, 11, 10).strftime('%A, %d %B %Y')
+        'update': "Jum'at, 15 November 2024"
     })
 
 @app.route('/importance', methods=['GET'])
